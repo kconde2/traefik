@@ -1,0 +1,4 @@
+- targets:
+  - grafana:3000
+  - prom-node-exporter:9100
+  - cadvisor:8080
