@@ -21,8 +21,8 @@ services:
         hostname: prometheus
         container_name: prometheus
         volumes:
-            - "./data/docker/volumes/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
-            - "./data/docker/volumes/prometheus/file_sd_configs.yml:/etc/prometheus/file_sd_configs.yml"
+            - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+            - './prometheus/file_sd_configs.yml:/etc/prometheus/file_sd_configs.yml'
         labels:
             - traefik.frontend.rule=Host:prometheus.aperogeek.fr
 
