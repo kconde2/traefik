@@ -1,0 +1,74 @@
+version: '3.4'
+services:
+    traefik:
+        image: traefik
+        command: --api --docker
+        container_name: traefik
+        ports:
+            - 80:80
+            - 443:443
+            - 8080:8080
+        networks:
+            - web
+        labels:
+            - traefik.frontend.rule=Host:traefik.localhost
+            - traefik.port=8080
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+
+    prometheus:
+        image: prom/prometheus
+        hostname: prometheus
+        container_name: prometheus
+        volumes:
+            - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+            - './prometheus/file_sd_configs.yml:/etc/prometheus/file_sd_configs.yml'
+        labels:
+            - traefik.frontend.rule=Host:prometheus.aperogeek.fr
+
+    prom_node_exporter:
+        image: prom/node-exporter
+        hostname: prom-node-exporter
+        container_name: prom-node-exporter
+        labels:
+            - traefik.enable=false
+
+    cadvisor:
+        image: google/cadvisor:latest
+        hostname: cadvisor
+        container_name: cadvisor
+        volumes:
+            - /:/rootfs:ro
+            - /var/run:/var/run:rw
+            - /sys:/sys:ro
+            - /var/lib/docker/:/var/lib/docker:ro
+        labels:
+        - traefik.enable=false
+
+    grafana:
+        image: grafana/grafana
+        ports:
+            - 127.0.0.1:3000:3000
+        volumes:
+            - grafana-storage:/var/lib/grafana
+            - ./grafana/log:/var/log/grafana
+        environment:
+            - GF_SECURITY_ADMIN_PASSWORD=supersecret
+            - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
+            - GF_USERS_ALLOW_SIGN_UP=false
+            - GF_SERVER_ROOT_URL=http://grafana.${DOMAIN_NAME}
+        labels:
+            - traefik.enable=true
+            - traefik.frontend.rule=Host:grafana.${DOMAIN_NAME}
+            - traefik.port=3000
+            - traefik.docker.network=web
+        networks:
+            - web
+            - default
+
+volumes:
+  grafana-storage:
+    external: true
+networks:
+  web:
+    external: true
